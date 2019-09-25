@@ -3,7 +3,8 @@
 import numpy as np
 import random
 from collections import defaultdict
-#-------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------
 '''
     Monte-Carlo
     In this problem, you will implememnt an AI player for Blackjack.
@@ -14,7 +15,9 @@ from collections import defaultdict
     You don't have to follow the comments to write your code. They are provided
     as hints in case you need. 
 '''
-#-------------------------------------------------------------------------
+
+
+# -------------------------------------------------------------------------
 
 def initial_policy(observation):
     """A policy that sticks if the player score is >= 20 and his otherwise
@@ -31,13 +34,18 @@ def initial_policy(observation):
     ############################
     # YOUR IMPLEMENTATION HERE #
     # get parameters from observation
+    if observation[0] >= 20:
+        action = 0;
+    else:
+        action = 1;
 
     # action
 
     ############################
-    return action 
+    return action
 
-def mc_prediction(policy, env, n_episodes, gamma = 1.0):
+
+def mc_prediction(policy, env, n_episodes, gamma=1.0):
     """Given policy using sampling to calculate the value function 
         by using Monte Carlo first visit algorithm.
     
@@ -61,48 +69,56 @@ def mc_prediction(policy, env, n_episodes, gamma = 1.0):
     returns_count = defaultdict(float)
     # a nested dictionary that maps state -> value
     V = defaultdict(float)
-    
+
     ############################
     # YOUR IMPLEMENTATION HERE #
     # loop each episode
+    for e in range(0, n_episodes):
 
         # initialize the episode
-
+        episode = []
         # generate empty episode list
+        state = env.reset()
+        # player score, dealer score, terminate condition
 
         # loop until episode generation is done
-
-
+        while (True):
             # select an action
-
+            action = policy(state)
             # return a reward and new state
-
+            next_state, reward, done, _ = env.step(action)
             # append state, action, reward to episode
-
+            episode.append((state, action, reward))
             # update state to new state
-
-            
-            
-
+            if done:
+                break
+            state = next_state
+        states = set()
+        for x in episode:
+            states.add(x[0])
         # loop for each step of episode, t = T-1, T-2,...,0
-
+        for state in states:
             # compute G
-
+            for i, x in enumerate(episode):
+                if x[0] == state:
+                    first_visit = i
+                    break
+            G = 0
+            for i, item in enumerate(episode[first_visit:]):
+                G += item[2] * (gamma ** i)
             # unless state_t appears in states
-            
-                # update return_count
-                
-                # update return_sum
-
-                # calculate average return for this state over all sampled episodes
-
-
-
+            # update return_count
+            returns_count[state] += 1
+            # update return_sum
+            returns_sum[state] += G
+            # calculate average return for this state over all sampled episodes
+            V[state] = returns_sum[state] / returns_count[state]
     ############################
-    
+
     return V
 
-def epsilon_greedy(Q, state, nA, epsilon = 0.1):
+
+def epsilon_greedy(Q, state, nA, epsilon=0.1):
     """Selects epsilon-greedy action for supplied state.
     
     Parameters:
@@ -128,14 +144,15 @@ def epsilon_greedy(Q, state, nA, epsilon = 0.1):
     """
     ############################
     # YOUR IMPLEMENTATION HERE #
-
-
-
-
+    A = np.ones(nA, dtype=float) * epsilon / nA
+    best_action = np.argmax(Q[state])
+    A[best_action] += (1 - epsilon)
+    action = np.random.choice(nA, 1, p=A)
     ############################
     return action
 
-def mc_control_epsilon_greedy(env, n_episodes, gamma = 1.0, epsilon = 0.1):
+
+def mc_control_epsilon_greedy(env, n_episodes, gamma=1.0, epsilon=0.1):
     """Monte Carlo control with exploring starts. 
         Find an optimal epsilon-greedy policy.
     
@@ -159,47 +176,57 @@ def mc_control_epsilon_greedy(env, n_episodes, gamma = 1.0, epsilon = 0.1):
     You could consider decaying epsilon, i.e. epsilon = epsilon-(0.1/n_episodes) during each episode
     and episode must > 0.    
     """
-    
+
     returns_sum = defaultdict(float)
     returns_count = defaultdict(float)
     # a nested dictionary that maps state -> (action -> action-value)
     # e.g. Q[state] = np.darrary(nA)
     Q = defaultdict(lambda: np.zeros(env.action_space.n))
-    
+
     ############################
     # YOUR IMPLEMENTATION HERE #
-
-        # define decaying epsilon
-
-
-
+    nA = env.action_space.n
+    # define decaying epsilon
+    epsilon = epsilon - (0.1 / n_episodes)
+    for _ in range(n_episodes):
         # initialize the episode
-
+        episode = []
         # generate empty episode list
-
+        state = env.reset()
         # loop until one episode generation is done
-
-
+        while True:
             # get an action from epsilon greedy policy
-
+            action = epsilon_greedy(Q, state, nA, epsilon)[0]
             # return a reward and new state
-
+            next_state, reward, done, _ = env.step(action)
             # append state, action, reward to episode
-
+            episode.append((state, action, reward))
             # update state to new state
-
-            
-        
+            if done:
+                break
+            state = next_state
         # loop for each step of episode, t = T-1, T-2, ...,0
-        
+        for step in episode:
+            state = step[0]
+            action = step[1]
+            for i, item in enumerate(episode):
+                if item[0] == state and item[1] == action:
+                    first_visit = i
+                    break
             # compute G
-            
-            # unless the pair state_t, action_t appears in <state action> pair list
-            
-                # update return_count
-                
-                # update return_sum
+            G = 0
+            for i, item in enumerate(episode[first_visit:]):
+                G += item[2] * (gamma ** i)
+            returns_sum[(state,action)] += G
+            returns_count[(state,action)] += 1.0
+            Q[state][action] = returns_sum[(state,action)] / returns_count[(state,action)]
 
-                # calculate average return for this state over all sampled episodes
-        
+    # unless the pair state_t, action_t appears in <state action> pair list
+
+    # update return_count
+
+    # update return_sum
+
+    # calculate average return for this state over all sampled episodes
+
     return Q

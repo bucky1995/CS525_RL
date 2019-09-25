@@ -59,7 +59,7 @@ def test_epsilon_greedy():
     for _ in range(10000):
         action = epsilon_greedy(Q, state, 4,  epsilon=0.1)
         actions.append(action)
-        
+    t = np.count_nonzero(actions)/10000
     assert np.allclose(1-np.count_nonzero(actions)/10000,0.925,atol=0.02)
     
 #---------------------------------------------------------------
@@ -79,4 +79,6 @@ def test_mc_control_epsilon_greedy():
     
     
     assert len(Q_500k) == 280
-    assert count >= 1 
+    assert count >= 1
+
+
