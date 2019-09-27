@@ -35,9 +35,9 @@ def initial_policy(observation):
     # YOUR IMPLEMENTATION HERE #
     # get parameters from observation
     if observation[0] >= 20:
-        action = 0;
+        action = 0
     else:
-        action = 1;
+        action = 1
 
     # action
 
@@ -70,19 +70,17 @@ def mc_prediction(policy, env, n_episodes, gamma=1.0):
     # a nested dictionary that maps state -> value
     V = defaultdict(float)
 
-    ############################
+     ############################
     # YOUR IMPLEMENTATION HERE #
     # loop each episode
     for e in range(0, n_episodes):
-
         # initialize the episode
         episode = []
         # generate empty episode list
-        state = env.reset()
-        # player score, dealer score, terminate condition
-
+        state = env.reset()  # player score, dealer score, terminate condition
         # loop until episode generation is done
-        while (True):
+        done = False
+        while not done:
             # select an action
             action = policy(state)
             # return a reward and new state
@@ -90,14 +88,10 @@ def mc_prediction(policy, env, n_episodes, gamma=1.0):
             # append state, action, reward to episode
             episode.append((state, action, reward))
             # update state to new state
-            if done:
-                break
             state = next_state
-        states = set()
-        for x in episode:
-            states.add(x[0])
         # loop for each step of episode, t = T-1, T-2,...,0
-        for state in states:
+        for step in episode:
+            state = step[0]
             # compute G
             for i, x in enumerate(episode):
                 if x[0] == state:
@@ -114,7 +108,6 @@ def mc_prediction(policy, env, n_episodes, gamma=1.0):
             # calculate average return for this state over all sampled episodes
             V[state] = returns_sum[state] / returns_count[state]
     ############################
-
     return V
 
 
@@ -194,7 +187,8 @@ def mc_control_epsilon_greedy(env, n_episodes, gamma=1.0, epsilon=0.1):
         # generate empty episode list
         state = env.reset()
         # loop until one episode generation is done
-        while True:
+        done = False
+        while not done:
             # get an action from epsilon greedy policy
             action = epsilon_greedy(Q, state, nA, epsilon)[0]
             # return a reward and new state
@@ -202,8 +196,6 @@ def mc_control_epsilon_greedy(env, n_episodes, gamma=1.0, epsilon=0.1):
             # append state, action, reward to episode
             episode.append((state, action, reward))
             # update state to new state
-            if done:
-                break
             state = next_state
         # loop for each step of episode, t = T-1, T-2, ...,0
         for step in episode:
@@ -217,16 +209,12 @@ def mc_control_epsilon_greedy(env, n_episodes, gamma=1.0, epsilon=0.1):
             G = 0
             for i, item in enumerate(episode[first_visit:]):
                 G += item[2] * (gamma ** i)
-            returns_sum[(state,action)] += G
-            returns_count[(state,action)] += 1.0
-            Q[state][action] = returns_sum[(state,action)] / returns_count[(state,action)]
-
-    # unless the pair state_t, action_t appears in <state action> pair list
-
-    # update return_count
-
-    # update return_sum
-
-    # calculate average return for this state over all sampled episodes
+            # unless the pair state_t, action_t appears in <state action> pair list
+            # update return_sum
+            returns_sum[(state, action)] += G
+            # update return_count
+            returns_count[(state, action)] += 1.0
+            # calculate average return for this state over all sampled episodes
+            Q[state][action] = returns_sum[(state, action)] / returns_count[(state, action)]
 
     return Q

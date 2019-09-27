@@ -84,8 +84,7 @@ def sarsa(env, n_episodes, gamma=1.0, alpha=0.5, epsilon=0.1):
     # YOUR IMPLEMENTATION HERE #
     nA = env.action_space.n
     # loop n_episodes
-    for ep in range(n_episodes):
-        print(ep)
+    for _ in range(n_episodes):
         # define decaying epsilon
         epsilon = 0.99*epsilon
         # initialize the environment
