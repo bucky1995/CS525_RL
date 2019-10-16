@@ -10,7 +10,6 @@ class Agent(object):
     def __init__(self, env):
         self.env = env
 
-
     def make_action(self, observation, test=True):
         """
         Return predicted action of your agent
@@ -35,4 +34,7 @@ class Agent(object):
         Put anything you want to initialize if necessary
 
         """
+        self.env = Environment('BreakoutNoFrameskip-v4', "",
+                               atari_wrapper=False, test=False)
+
         raise NotImplementedError("Subclasses should implement this!")
